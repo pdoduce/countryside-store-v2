@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import Header from '@/components/Header'
+import Banner from '@/components/Banner'
+import Footer from '@/components/Footer'
 
 type Product = {
   id: string
@@ -33,6 +35,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      <Banner />
 
       {/* Hero Section */}
       <section className="bg-green-100 text-center py-14 px-4 md:px-8">
@@ -57,7 +60,7 @@ export default function HomePage() {
           <p className="text-center text-gray-500">Loading...</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {products.map((product) => (
+            {products.slice(0, 12).map((product) => (
               <div
                 key={product.id}
                 className="bg-white rounded-xl shadow hover:shadow-lg p-4 transition flex flex-col"
@@ -82,10 +85,23 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t py-6 px-4 text-center text-sm text-gray-600 mt-8">
-        &copy; {new Date().getFullYear()} Countryside Store. All rights reserved.
-      </footer>
+      {/* Shop by Category */}
+      <section className="bg-white py-12 px-4 md:px-8">
+        <h2 className="text-xl md:text-2xl font-bold text-center mb-8">🛍️ Shop by Category</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          {['Fruits', 'Vegetables', 'Grains', 'Dairy'].map((category) => (
+            <Link key={category} href={`/categories/${category.toLowerCase()}`}>
+              <div className="bg-green-100 hover:bg-green-200 transition rounded-xl p-6 text-center shadow-md cursor-pointer">
+                <h3 className="text-lg font-semibold text-green-800">{category}</h3>
+                <p className="text-sm text-gray-600 mt-1">Explore {category}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer (imported version) */}
+      <Footer />
     </div>
   )
 }
