@@ -24,13 +24,23 @@ export default function HomePage() {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .order('created_at', { ascending: false })
 
-      if (!error && data) setProducts(data)
+      if (!error && data) {
+        const shuffled = [...data].sort(() => 0.5 - Math.random())
+        setProducts(shuffled)
+      }
+
       setLoading(false)
     }
+
     fetchProducts()
   }, [])
+
+  const toTitleCase = (str: string) =>
+    str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase())
+
+  const formatPrice = (price: number) =>
+    price.toLocaleString('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 2 })
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -63,22 +73,26 @@ export default function HomePage() {
             {products.slice(0, 12).map((product) => (
               <div
                 key={product.id}
-                className="bg-white rounded-xl shadow hover:shadow-lg p-4 transition flex flex-col"
+                className="bg-white rounded-xl shadow hover:shadow-lg p-4 transition flex flex-col items-center"
               >
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-full h-44 md:h-48 object-cover rounded mb-2"
-                />
-                <h3 className="font-semibold text-md md:text-lg text-gray-800 line-clamp-1">
-                  {product.name}
-                </h3>
-                <p className="text-green-600 font-bold mt-1">₦{product.price}</p>
-                <Link href={`/product/${product.id}`}>
-                  <button className="mt-3 bg-black text-white w-full py-2 rounded hover:bg-gray-800">
-                    View Product
-                  </button>
-                </Link>
+                <div className="w-full">
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white"
+                  />
+                  <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1">
+                    {toTitleCase(product.name)}
+                  </h3>
+                  <p className="text-green-600 font-bold mt-1 text-center">
+                    {formatPrice(product.price)}
+                  </p>
+                  <Link href={`/product/${product.id}`}>
+                    <button className="mt-3 bg-black text-white py-2 rounded hover:bg-gray-800 w-full">
+                      Add To Cart
+                    </button>
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
@@ -89,18 +103,59 @@ export default function HomePage() {
       <section className="bg-white py-12 px-4 md:px-8">
         <h2 className="text-xl md:text-2xl font-bold text-center mb-8">🛍️ Shop by Category</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
-          {['Fruits', 'Vegetables', 'Grains', 'Dairy'].map((category) => (
-            <Link key={category} href={`/categories/${category.toLowerCase()}`}>
+          {[
+            { name: 'Spices', icon: '🌶️' },
+            { name: 'Food', icon: '🍛' },
+            { name: 'Oils', icon: '🫒' },
+            { name: 'Herbs', icon: '🌿' },
+          ].map((category) => (
+            <Link key={category.name} href={`/categories/${category.name.toLowerCase()}`}>
               <div className="bg-green-100 hover:bg-green-200 transition rounded-xl p-6 text-center shadow-md cursor-pointer">
-                <h3 className="text-lg font-semibold text-green-800">{category}</h3>
-                <p className="text-sm text-gray-600 mt-1">Explore {category}</p>
+                <div className="text-3xl mb-2">{category.icon}</div>
+                <h3 className="text-lg font-semibold text-green-800">{category.name}</h3>
+                <p className="text-sm text-gray-600 mt-1">Explore {category.name}</p>
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Footer (imported version) */}
+      {/* Trending Products */}
+      <section className="bg-gray-50 p-4 md:p-6">
+        <h2 className="text-xl md:text-2xl font-bold text-center mb-6">🔥 Trending Products</h2>
+        {loading ? (
+          <p className="text-center text-gray-500">Loading...</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {products.slice(12, 24).map((product) => (
+              <div
+                key={product.id}
+                className="bg-white rounded-xl shadow hover:shadow-lg p-4 transition flex flex-col items-center"
+              >
+                <div className="w-full">
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white"
+                  />
+                  <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1">
+                    {toTitleCase(product.name)}
+                  </h3>
+                  <p className="text-green-600 font-bold mt-1 text-center">
+                    {formatPrice(product.price)}
+                  </p>
+                  <Link href={`/product/${product.id}`}>
+                    <button className="mt-3 bg-black text-white py-2 rounded hover:bg-gray-800 w-full">
+                      Add To Cart
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       <Footer />
     </div>
   )
