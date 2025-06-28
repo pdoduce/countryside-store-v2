@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import {
   ShoppingCart,
@@ -44,9 +45,11 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <img
+          <Image
             src="https://ulhtbciaoutwqsckrtir.supabase.co/storage/v1/object/public/images//reallogoContr.png"
             alt="Countryside Logo"
+            width={120}
+            height={32}
             className="h-8 w-auto"
           />
           <span className="text-2xl font-bold text-green-700 hidden sm:inline">

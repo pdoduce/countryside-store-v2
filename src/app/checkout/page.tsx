@@ -20,7 +20,8 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const FLW_PUBLIC_KEY = process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY!
+  // const FLW_PUBLIC_KEY = process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY!
+  // const redirectUrl = `${window.location.origin}/payment-success`
 
   useEffect(() => {
     const storedCart = localStorage.getItem('cart')
@@ -70,14 +71,12 @@ export default function CheckoutPage() {
     await supabase.from('order_items').insert(itemsPayload)
 
     // 3. Redirect to Flutterwave
-    const redirectUrl = 'https://checkout.flutterwave.com/v3/hosted/pay'
     const tx_ref = `${Date.now()}-${order.id}`
 
     const payload = {
       tx_ref,
       amount: total,
       currency: 'NGN',
-      redirect_url: `${window.location.origin}/payment-success`,
       customer: {
         email,
         phonenumber: phone,

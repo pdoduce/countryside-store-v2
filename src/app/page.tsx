@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import Image from 'next/image'
 import Header from '@/components/Header'
 import Banner from '@/components/Banner'
 import Footer from '@/components/Footer'
@@ -44,7 +45,6 @@ export default function HomePage() {
     })
 
   const handleAddToCart = (product: Product) => {
-    // This can later push to localStorage or Supabase cart table
     toast.success(`${toTitleCase(product.name)} added to cart!`)
   }
 
@@ -53,7 +53,6 @@ export default function HomePage() {
       <Header />
       <Banner />
 
-      {/* Hero Section */}
       <section className="bg-green-100 text-center py-14 px-4 md:px-8">
         <h1 className="text-3xl md:text-5xl font-bold text-green-800 mb-4">
           Fresh & Quality Products 🧺
@@ -68,7 +67,6 @@ export default function HomePage() {
         </Link>
       </section>
 
-      {/* Featured Products */}
       <main className="flex-grow p-4 md:p-6 bg-gray-50">
         <h2 className="text-xl md:text-2xl font-bold text-center mb-6">🌟 Featured Products</h2>
         {loading ? (
@@ -82,9 +80,11 @@ export default function HomePage() {
               >
                 <div className="w-full">
                   <Link href={`/product/${product.id}`}>
-                    <img
+                    <Image
                       src={product.image_url}
                       alt={product.name}
+                      width={400}
+                      height={400}
                       className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white cursor-pointer"
                     />
                     <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1 hover:underline">
@@ -107,7 +107,6 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Shop by Category */}
       <section className="bg-white py-12 px-4 md:px-8">
         <h2 className="text-xl md:text-2xl font-bold text-center mb-8">🛍️ Shop by Category</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
@@ -128,7 +127,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trending Products */}
       <section className="bg-gray-50 p-4 md:p-6">
         <h2 className="text-xl md:text-2xl font-bold text-center mb-6">🔥 Trending Products</h2>
         {loading ? (
@@ -142,9 +140,11 @@ export default function HomePage() {
               >
                 <div className="w-full">
                   <Link href={`/product/${product.id}`}>
-                    <img
+                    <Image
                       src={product.image_url}
                       alt={product.name}
+                      width={400}
+                      height={400}
                       className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white cursor-pointer"
                     />
                     <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1 hover:underline">

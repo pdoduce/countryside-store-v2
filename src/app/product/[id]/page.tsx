@@ -7,6 +7,7 @@ import Header from '@/components/Header'
 import Banner from '@/components/Banner'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
+import Image from 'next/image'
 
 type Product = {
   id: string
@@ -55,11 +56,15 @@ export default function ProductDetailPage() {
           <p className="text-center text-red-500">Product not found.</p>
         ) : (
           <div className="max-w-5xl mx-auto bg-white rounded-xl shadow p-6 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <img
-              src={product.image_url}
-              alt={product.name}
-              className="w-full h-72 md:h-[28rem] object-contain bg-white rounded"
-            />
+            <div className="relative w-full h-72 md:h-[28rem]">
+              <Image
+                src={product.image_url}
+                alt={product.name}
+                fill
+                className="object-contain bg-white rounded"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
 
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">

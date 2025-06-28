@@ -8,12 +8,14 @@ import Header from '@/components/Header'
 import Banner from '@/components/Banner'
 import Footer from '@/components/Footer'
 import { toast } from 'sonner'
+import Image from 'next/image'
 
 type Product = {
   id: string
   name: string
   price: number
   image_url: string
+  category?: string
 }
 
 const PRODUCTS_PER_PAGE = 20
@@ -94,12 +96,16 @@ function ShopPageContent() {
                 key={product.id}
                 className="bg-white rounded-xl shadow hover:shadow-lg p-4 transition flex flex-col items-center"
               >
-                <Link href={`/product/${product.id}`} className="w-full">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white"
-                  />
+                <Link href={`/product/${product.id}`} className="w-full block">
+                  <div className="relative w-full h-44 md:h-56 lg:h-64">
+                    <Image
+                      src={product.image_url}
+                      alt={product.name}
+                      fill
+                      className="object-contain rounded bg-white"
+                      sizes="(max-width: 768px) 100vw, 25vw"
+                    />
+                  </div>
                 </Link>
 
                 <Link href={`/product/${product.id}`} className="w-full text-center">

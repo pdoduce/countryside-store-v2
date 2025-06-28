@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 
 interface CartItem {
   id: string
@@ -15,9 +14,7 @@ interface CartItem {
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([])
-  const router = useRouter()
-
-  useEffect(() => {
+   useEffect(() => {
     const storedCart = localStorage.getItem('cart')
     if (storedCart) {
       setCart(JSON.parse(storedCart))
