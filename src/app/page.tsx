@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import Banner from '@/components/Banner'
 import Footer from '@/components/Footer'
+import { toast } from 'sonner'
 
 type Product = {
   id: string
@@ -21,15 +22,11 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-
+      const { data, error } = await supabase.from('products').select('*')
       if (!error && data) {
         const shuffled = [...data].sort(() => 0.5 - Math.random())
         setProducts(shuffled)
       }
-
       setLoading(false)
     }
 
@@ -40,7 +37,16 @@ export default function HomePage() {
     str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase())
 
   const formatPrice = (price: number) =>
-    price.toLocaleString('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 2 })
+    price.toLocaleString('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 2,
+    })
+
+  const handleAddToCart = (product: Product) => {
+    // This can later push to localStorage or Supabase cart table
+    toast.success(`${toTitleCase(product.name)} added to cart!`)
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -55,7 +61,7 @@ export default function HomePage() {
         <p className="text-base md:text-lg text-gray-700 mb-6">
           Shop fresh and natural products directly from the countryside.
         </p>
-        <Link href="/products">
+        <Link href="/shop">
           <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full shadow-md">
             Shop Now
           </button>
@@ -65,7 +71,6 @@ export default function HomePage() {
       {/* Featured Products */}
       <main className="flex-grow p-4 md:p-6 bg-gray-50">
         <h2 className="text-xl md:text-2xl font-bold text-center mb-6">🌟 Featured Products</h2>
-
         {loading ? (
           <p className="text-center text-gray-500">Loading...</p>
         ) : (
@@ -76,22 +81,25 @@ export default function HomePage() {
                 className="bg-white rounded-xl shadow hover:shadow-lg p-4 transition flex flex-col items-center"
               >
                 <div className="w-full">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white"
-                  />
-                  <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1">
-                    {toTitleCase(product.name)}
-                  </h3>
+                  <Link href={`/product/${product.id}`}>
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white cursor-pointer"
+                    />
+                    <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1 hover:underline">
+                      {toTitleCase(product.name)}
+                    </h3>
+                  </Link>
                   <p className="text-green-600 font-bold mt-1 text-center">
                     {formatPrice(product.price)}
                   </p>
-                  <Link href={`/product/${product.id}`}>
-                    <button className="mt-3 bg-black text-white py-2 rounded hover:bg-gray-800 w-full">
-                      Add To Cart
-                    </button>
-                  </Link>
+                  <button
+                    className="mt-3 bg-black text-white py-2 rounded hover:bg-gray-800 w-full"
+                    onClick={() => handleAddToCart(product)}
+                  >
+                    Add To Cart
+                  </button>
                 </div>
               </div>
             ))}
@@ -133,22 +141,25 @@ export default function HomePage() {
                 className="bg-white rounded-xl shadow hover:shadow-lg p-4 transition flex flex-col items-center"
               >
                 <div className="w-full">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white"
-                  />
-                  <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1">
-                    {toTitleCase(product.name)}
-                  </h3>
+                  <Link href={`/product/${product.id}`}>
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white cursor-pointer"
+                    />
+                    <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1 hover:underline">
+                      {toTitleCase(product.name)}
+                    </h3>
+                  </Link>
                   <p className="text-green-600 font-bold mt-1 text-center">
                     {formatPrice(product.price)}
                   </p>
-                  <Link href={`/product/${product.id}`}>
-                    <button className="mt-3 bg-black text-white py-2 rounded hover:bg-gray-800 w-full">
-                      Add To Cart
-                    </button>
-                  </Link>
+                  <button
+                    className="mt-3 bg-black text-white py-2 rounded hover:bg-gray-800 w-full"
+                    onClick={() => handleAddToCart(product)}
+                  >
+                    Add To Cart
+                  </button>
                 </div>
               </div>
             ))}
