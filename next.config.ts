@@ -5,6 +5,11 @@ import type { Configuration } from 'webpack'
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  // ✅ Add image domain for Supabase
+  images: {
+    domains: ['ulhtbciaoutwqsckrtir.supabase.co'],
+  },
+
   webpack: (config: Configuration) => {
     config.resolve = {
       ...(config.resolve || {}),
