@@ -2,14 +2,33 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { ShoppingCart, User, Search, Menu, X } from 'lucide-react'
+import {
+  ShoppingCart,
+  User,
+  Search,
+  Menu,
+  X,
+  ChevronDown,
+  Flame,
+  Utensils,
+  Droplet,
+  Sprout,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchVisible, setSearchVisible] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const router = useRouter()
+
+  const categories = [
+    { name: 'spices', icon: <Flame className="w-4 h-4 mr-2 text-red-500" /> },
+    { name: 'food', icon: <Utensils className="w-4 h-4 mr-2 text-yellow-600" /> },
+    { name: 'oils', icon: <Droplet className="w-4 h-4 mr-2 text-blue-500" /> },
+    { name: 'herbs', icon: <Sprout className="w-4 h-4 mr-2 text-green-600" /> },
+  ]
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,7 +41,6 @@ export default function Header() {
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
-      {/* Main Nav */}
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
@@ -31,18 +49,47 @@ export default function Header() {
             alt="Countryside Logo"
             className="h-8 w-auto"
           />
-          <span className="text-2xl font-bold text-green-700 hidden sm:inline">Countryside</span>
+          <span className="text-2xl font-bold text-green-700 hidden sm:inline">
+            Countryside
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex space-x-6 text-sm text-gray-700">
+        <nav className="hidden md:flex space-x-6 text-sm text-gray-700 relative items-center">
           <Link href="/" className="hover:text-green-600">Home</Link>
           <Link href="/shop" className="hover:text-green-600">Shop</Link>
-          <Link href="/categories" className="hover:text-green-600">Categories</Link>
-          <Link href="/cart" className="hover:text-green-600">Cart</Link>
+
+          {/* Categories Dropdown - Click Based */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCategoryDropdown((prev) => !prev)}
+              className="flex items-center space-x-1 cursor-pointer hover:text-green-600 focus:outline-none"
+            >
+              <span>Categories</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+
+            {showCategoryDropdown && (
+              <div className="absolute top-full left-0 mt-2 bg-white border rounded shadow-md z-20 py-2 w-44">
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.name}
+                    href={`/categories/${cat.name}`}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-100 capitalize"
+                    onClick={() => setShowCategoryDropdown(false)}
+                  >
+                    {cat.icon}
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Link href="/contact" className="hover:text-green-600">Contact</Link>
         </nav>
 
-        {/* Icons */}
+        {/* Icons (Search, User, Cart, Menu) */}
         <div className="flex items-center space-x-4 text-gray-700">
           <button
             className="md:hidden"
@@ -74,10 +121,13 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Search Input (Mobile + Desktop) */}
+      {/* Search Input */}
       {searchVisible && (
         <div className="bg-green-100 px-4 py-2 border-t md:border-none">
-          <form onSubmit={handleSearchSubmit} className="max-w-3xl mx-auto flex w-full">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="max-w-3xl mx-auto flex w-full"
+          >
             <input
               type="text"
               value={searchTerm}
@@ -100,8 +150,27 @@ export default function Header() {
         <div className="md:hidden bg-white shadow-md border-t px-4 py-3 space-y-2 text-sm text-gray-700">
           <Link href="/" className="block hover:text-green-600">Home</Link>
           <Link href="/shop" className="block hover:text-green-600">Shop</Link>
-          <Link href="/categories" className="block hover:text-green-600">Categories</Link>
-          <Link href="/cart" className="block hover:text-green-600">Cart</Link>
+
+          <details className="block">
+            <summary className="cursor-pointer text-gray-700 hover:text-green-600">
+              Categories
+            </summary>
+            <div className="pl-4 mt-2 space-y-1">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.name}
+                  href={`/categories/${cat.name}`}
+                  className="flex items-center text-sm text-gray-700 hover:text-green-600 capitalize"
+                >
+                  {cat.icon}
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          </details>
+
+          <Link href="/contact" className="block hover:text-green-600">Contact</Link>
+          <Link href="/login" className="block hover:text-green-600">Account</Link>
         </div>
       )}
     </header>
