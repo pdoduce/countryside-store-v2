@@ -20,9 +20,6 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
 
-  //const FLW_PUBLIC_KEY = process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY!
-  const redirectUrl = `${window.location.origin}/payment-success`
-
   useEffect(() => {
     const storedCart = localStorage.getItem('cart')
     if (storedCart) setCart(JSON.parse(storedCart))
@@ -72,11 +69,13 @@ export default function CheckoutPage() {
 
     // 3. Redirect to Flutterwave
     const tx_ref = `${Date.now()}-${order.id}`
+    const redirect_url = `${window.location.origin}/payment-success`
 
     const payload = {
       tx_ref,
       amount: total,
       currency: 'NGN',
+      redirect_url, // ✅ USE redirect_url HERE
       customer: {
         email,
         phonenumber: phone,
