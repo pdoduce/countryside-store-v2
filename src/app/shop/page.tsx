@@ -25,7 +25,7 @@ function ShopPageContent() {
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const searchParams = useSearchParams()
-  const query = searchParams.get('q')?.toLowerCase() || ''
+const query = (searchParams?.get('q') ?? '').toLowerCase()
 
   useEffect(() => {
     const fetchProducts = async () => {
