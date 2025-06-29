@@ -1,23 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import { supabase } from '@/lib/supabase'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams()
-  const [status, setStatus] = useState<'pending'|'success'|'failed'>('pending')
-  const [message, setMessage] = useState('Verifying payment...')
+  const router = useRouter()
+  const [status, setStatus] = useState<'success' | 'failed' | 'pending'>('pending')
 
   useEffect(() => {
-    async function verifyTransaction() {
+    const verifyTransaction = async () => {
       const txRef = searchParams?.get('tx_ref')
       const transactionId = searchParams?.get('transaction_id')
+
       if (!txRef || !transactionId) {
         setStatus('failed')
-        setMessage('Missing transaction reference.')
         return
       }
 
@@ -27,17 +24,10 @@ export default function PaymentSuccessPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tx_ref: txRef, transaction_id: transactionId }),
         })
-        const json = await res.json()
-        if (json.status === 'success') {
-          setStatus('success')
-          setMessage('Your payment was successful! Thank you for your order.')
-        } else {
-          setStatus('failed')
-          setMessage('Payment verification failed.')
-        }
+        const { status: flwStatus } = await res.json()
+        setStatus(flwStatus === 'successful' ? 'success' : 'failed')
       } catch {
         setStatus('failed')
-        setMessage('An error occurred during verification.')
       }
     }
 
@@ -45,17 +35,34 @@ export default function PaymentSuccessPage() {
   }, [searchParams])
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow flex flex-col items-center justify-center px-4">
-        <h1 className="text-3xl font-bold mb-4">
-          {status === 'pending' && 'Verifying Payment...'}
-          {status === 'success' && 'Payment Successful 🎉'}
-          {status === 'failed' && 'Payment Failed ❌'}
-        </h1>
-        <p className="text-center text-gray-700">{message}</p>
-      </main>
-      <Footer />
+    <div className="max-w-xl mx-auto p-6 text-center">
+      {status === 'pending' && <p className="text-gray-700">Verifying payment, please wait…</p>}
+      {status === 'success' && (
+        <>
+          <h1 className="text-3xl font-bold text-green-600 mb-4">Payment Successful!</h1>
+          <p className="text-gray-800 mb-6">Thank you for your order. Your payment has been confirmed.</p>
+          <button
+            onClick={() => router.push('/')}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Continue Shopping
+          </button>
+        </>
+      )}
+      {status === 'failed' && (
+        <>
+          <h1 className="text-3xl font-bold text-red-600 mb-4">Payment Failed</h1>
+          <p className="text-gray-800 mb-6">
+            We could not verify your payment. Please try again or contact support.
+          </p>
+          <button
+            onClick={() => router.push('/checkout')}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </>
+      )}
     </div>
   )
 }
