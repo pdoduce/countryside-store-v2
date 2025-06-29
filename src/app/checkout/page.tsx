@@ -20,8 +20,8 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // const FLW_PUBLIC_KEY = process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY!
-  // const redirectUrl = `${window.location.origin}/payment-success`
+  //const FLW_PUBLIC_KEY = process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY!
+  const redirectUrl = `${window.location.origin}/payment-success`
 
   useEffect(() => {
     const storedCart = localStorage.getItem('cart')

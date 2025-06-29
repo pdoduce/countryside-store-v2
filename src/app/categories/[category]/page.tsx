@@ -21,7 +21,7 @@ type Product = {
 const PRODUCTS_PER_PAGE = 20
 
 export default function CategoryPage() {
-  const { category } = useParams()
+  const { category } = useParams<{ category: string }>() // ✅ Fixed typing
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
@@ -75,7 +75,7 @@ export default function CategoryPage() {
 
       <main className="flex-grow p-4 md:p-8 bg-gray-50">
         <h1 className="text-2xl md:text-3xl font-bold text-center text-green-800 mb-8 capitalize">
-          {category} Products
+          {toTitleCase(category)} Products
         </h1>
 
         {loading ? (
