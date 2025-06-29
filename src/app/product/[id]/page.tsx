@@ -19,7 +19,8 @@ type Product = {
 }
 
 export default function ProductDetailPage() {
-  const { id } = useParams()
+  const params = useParams() as { id: string }
+const id = params.id
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
 
