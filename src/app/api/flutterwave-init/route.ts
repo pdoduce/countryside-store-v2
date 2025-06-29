@@ -1,32 +1,30 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import crypto from 'crypto'
 
-export async function POST(req: Request) {
-  const body = await req.json()
-  const { transaction_id } = body
+const FLW_SECRET_KEY = process.env.FLW_SECRET_KEY!
 
-  try {
-    const secretKey = process.env.FLW_SECRET_KEY
-    const url = `https://api.flutterwave.com/v3/transactions/${transaction_id}/verify`
+export async function POST(request: NextRequest) {
+  const body = await request.json()
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${secretKey}`,
-        'Content-Type': 'application/json',
-      },
-    })
+  // Generate signature
+  const signature = crypto
+    .createHmac('sha256', FLW_SECRET_KEY)
+    .update(JSON.stringify(body))
+    .digest('hex')
 
-    const result = await response.json()
+  const res = await fetch('https://api.flutterwave.com/v3/payments', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${FLW_SECRET_KEY}`,
+      'verif-hash': signature,
+    },
+    body: JSON.stringify(body),
+  })
 
-    // You can also update your Supabase order status here if needed
+  const data = await res.json()
+  // if (data.status !== 'success') throw new Error('Flutterwave init failed')
 
-    return NextResponse.json({
-      status: result.data.status,
-      amount: result.data.amount,
-      currency: result.data.currency,
-      customer: result.data.customer,
-    })
-  } catch (error) {
-    return NextResponse.json({ error: 'Verification failed' }, { status: 500 })
-  }
+  return NextResponse.json({ link: data.data.link })
 }
