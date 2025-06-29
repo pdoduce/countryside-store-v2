@@ -2,8 +2,8 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
-import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
+//import { supabase } from '@/lib/supabase'
+//import { toast } from 'sonner'
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams()
