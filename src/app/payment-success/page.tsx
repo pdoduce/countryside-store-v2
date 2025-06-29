@@ -1,68 +1,55 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams()
-  const router = useRouter()
-  const [status, setStatus] = useState<'success' | 'failed' | 'pending'>('pending')
+  const txRef = searchParams?.get('tx_ref')
+  const transactionId = searchParams?.get('transaction_id')
+  const [status, setStatus] = useState('Verifying...')
 
   useEffect(() => {
     const verifyTransaction = async () => {
-      const txRef = searchParams?.get('tx_ref')
-      const transactionId = searchParams?.get('transaction_id')
-
-      if (!txRef || !transactionId) {
-        setStatus('failed')
+      if (!transactionId || !txRef) {
+        setStatus('Invalid transaction data')
         return
       }
 
       try {
-        const res = await fetch('/api/flutterwave-verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tx_ref: txRef, transaction_id: transactionId }),
-        })
-        const { status: flwStatus } = await res.json()
-        setStatus(flwStatus === 'successful' ? 'success' : 'failed')
-      } catch {
-        setStatus('failed')
+        const res = await fetch(`/api/flutterwave-verify?transaction_id=${transactionId}`)
+        const data = await res.json()
+
+        if (data.status === 'success') {
+          setStatus('Payment Verified Successfully 🎉')
+        } else {
+          setStatus('Payment verification failed')
+        }
+      } catch (err) {
+        console.error(err)
+        setStatus('Error verifying payment')
       }
     }
 
     verifyTransaction()
-  }, [searchParams])
+  }, [transactionId, txRef])
 
   return (
-    <div className="max-w-xl mx-auto p-6 text-center">
-      {status === 'pending' && <p className="text-gray-700">Verifying payment, please wait…</p>}
-      {status === 'success' && (
-        <>
-          <h1 className="text-3xl font-bold text-green-600 mb-4">Payment Successful!</h1>
-          <p className="text-gray-800 mb-6">Thank you for your order. Your payment has been confirmed.</p>
-          <button
-            onClick={() => router.push('/')}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            Continue Shopping
-          </button>
-        </>
-      )}
-      {status === 'failed' && (
-        <>
-          <h1 className="text-3xl font-bold text-red-600 mb-4">Payment Failed</h1>
-          <p className="text-gray-800 mb-6">
-            We could not verify your payment. Please try again or contact support.
-          </p>
-          <button
-            onClick={() => router.push('/checkout')}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          >
-            Try Again
-          </button>
-        </>
-      )}
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="bg-white shadow-md rounded-lg p-8 max-w-md text-center">
+        <h1 className="text-2xl font-bold text-green-600 mb-4">Payment Status</h1>
+        <p className="text-gray-700">{status}</p>
+      </div>
     </div>
+  )
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<p className="text-center mt-10 text-gray-500">Loading...</p>}>
+      <PaymentSuccessContent />
+    </Suspense>
   )
 }
