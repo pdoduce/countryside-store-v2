@@ -21,7 +21,8 @@ type Product = {
 const PRODUCTS_PER_PAGE = 20
 
 export default function CategoryPage() {
-  const { category } = useParams<{ category: string }>() // ✅ Fixed typing
+const params = useParams() as { category: string }
+const category = params.category
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
