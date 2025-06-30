@@ -47,9 +47,10 @@ export default function Header() {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]')
     setCartCount(cart.length)
 
-    // Listen for custom 'cart-updated' events
-    const handleCartUpdated = (e: any) => {
-      setCartCount(e.detail)
+    // Listen for custom 'cart-updated' events with correct typing
+    const handleCartUpdated = (e: Event) => {
+      const customEvent = e as CustomEvent<number>
+      setCartCount(customEvent.detail)
     }
 
     window.addEventListener('cart-updated', handleCartUpdated)
