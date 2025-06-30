@@ -2,45 +2,47 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
-//import { supabase } from '@/lib/supabase'
-//import { toast } from 'sonner'
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const txRef = searchParams?.get('tx_ref')
-  const transactionId = searchParams?.get('transaction_id')
-  const [status, setStatus] = useState('Verifying...')
+  const [status, setStatus] = useState('Verifying payment...')
 
   useEffect(() => {
-    const verifyTransaction = async () => {
-      if (!transactionId || !txRef) {
-        setStatus('Invalid transaction data')
+    const verifyPayment = async () => {
+      if (!txRef) {
+        setStatus('Transaction reference not found.')
         return
       }
 
       try {
-        const res = await fetch(`/api/flutterwave-verify?transaction_id=${transactionId}`)
+        const res = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tx_ref: txRef }),
+        })
+
         const data = await res.json()
 
-        if (data.status === 'success') {
-          setStatus('Payment Verified Successfully 🎉')
+        if (res.ok && data.success) {
+          setStatus('✅ Payment Verified Successfully! 🎉')
         } else {
-          setStatus('Payment verification failed')
+          setStatus('❌ Payment verification failed. Please contact support.')
         }
-      } catch (err) {
-        console.error(err)
-        setStatus('Error verifying payment')
+      } catch (error) {
+        console.error('Error verifying payment:', error)
+        setStatus('❌ Error verifying payment. Try again later.')
       }
     }
 
-    verifyTransaction()
-  }, [transactionId, txRef])
+    verifyPayment()
+  }, [txRef])
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white shadow-md rounded-lg p-8 max-w-md text-center">
-        <h1 className="text-2xl font-bold text-green-600 mb-4">Payment Status</h1>
-        <p className="text-gray-700">{status}</p>
+      <div className="bg-white shadow-lg rounded-lg p-8 max-w-md text-center">
+        <h1 className="text-2xl font-bold text-green-700 mb-4">Payment Status</h1>
+        <p className="text-gray-800">{status}</p>
       </div>
     </div>
   )

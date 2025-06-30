@@ -12,11 +12,18 @@ export async function POST(req: Request) {
     const verifyUrl = `https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref=${tx_ref}`
 
     const res = await fetch(verifyUrl, {
+      method: 'GET', // ✅ THIS IS THE MAIN FIX: Set method to GET
       headers: {
         Authorization: `Bearer ${FLW_SECRET_KEY}`,
         'Content-Type': 'application/json',
       },
     })
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.error('Flutterwave verification failed:', errorText)
+      return NextResponse.json({ success: false, message: errorText }, { status: 400 })
+    }
 
     const result = await res.json()
     const paymentData = result.data
@@ -32,10 +39,10 @@ export async function POST(req: Request) {
 
       return NextResponse.json({ success: true })
     } else {
-      return NextResponse.json({ success: false }, { status: 400 })
+      return NextResponse.json({ success: false, message: 'Payment not successful' }, { status: 400 })
     }
   } catch (err) {
     console.error('Payment verification failed:', err)
-    return NextResponse.json({ success: false }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Unexpected server error' }, { status: 500 })
   }
 }

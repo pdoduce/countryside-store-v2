@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -6,6 +7,7 @@ import Image from 'next/image'
 import { Trash2 } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { useRouter } from 'next/navigation'
 
 interface CartItem {
   id: string
@@ -17,12 +19,12 @@ interface CartItem {
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([])
+  const router = useRouter()
 
   useEffect(() => {
     const storedCart = localStorage.getItem('cart')
     if (storedCart) {
       const parsed = JSON.parse(storedCart)
-      // Remove duplicates
       const unique = parsed.filter(
         (item: CartItem, index: number, self: CartItem[]) =>
           index === self.findIndex((t) => t.id === item.id)
@@ -46,6 +48,13 @@ export default function CartPage() {
     const updatedCart = cart.filter((item) => item.id !== id)
     setCart(updatedCart)
     localStorage.setItem('cart', JSON.stringify(updatedCart))
+  }
+
+  const clearCart = () => {
+    localStorage.removeItem('cart')
+    setCart([])
+    window.dispatchEvent(new CustomEvent('cart-updated', { detail: 0 }))
+    router.push('/shop')
   }
 
   if (cart.length === 0) {
@@ -81,9 +90,7 @@ export default function CartPage() {
                 <th className="p-4">Price</th>
                 <th className="p-4">Quantity</th>
                 <th className="p-4">Subtotal</th>
-                <th className="p-4 text-center">
-                  
-                </th>
+                <th className="p-4 text-center"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -130,12 +137,20 @@ export default function CartPage() {
           <h3 className="text-2xl font-bold text-gray-800">
             Total: <span className="text-green-700">₦{total.toLocaleString()}</span>
           </h3>
-          <Link
-            href="/checkout"
-            className="bg-green-600 text-white px-8 py-3 rounded-full hover:bg-green-700 transition"
-          >
-            ✅ Proceed to Checkout
-          </Link>
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={clearCart}
+              className="bg-red-500 text-white px-6 py-3 rounded-full hover:bg-red-600 transition"
+            >
+              🗑️ Clear Cart
+            </button>
+            <Link
+              href="/checkout"
+              className="bg-green-600 text-white px-8 py-3 rounded-full hover:bg-green-700 transition"
+            >
+              ✅ Proceed to Checkout
+            </Link>
+          </div>
         </div>
       </div>
       <Footer />
