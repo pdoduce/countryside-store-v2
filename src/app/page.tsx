@@ -20,6 +20,7 @@ type Product = {
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [cartItems, setCartItems] = useState<string[]>([]) // stores added product ids
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -32,6 +33,9 @@ export default function HomePage() {
     }
 
     fetchProducts()
+
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    setCartItems(cart.map((item: Product) => item.id))
   }, [])
 
   const toTitleCase = (str: string) =>
@@ -45,8 +49,65 @@ export default function HomePage() {
     })
 
   const handleAddToCart = (product: Product) => {
-    toast.success(`${toTitleCase(product.name)} added to cart!`)
+    const existingCart = JSON.parse(localStorage.getItem('cart') || '[]')
+    const alreadyInCart = existingCart.some((item: Product) => item.id === product.id)
+
+    if (!alreadyInCart) {
+      const updatedCart = [...existingCart, { ...product, quantity: 1 }]
+      localStorage.setItem('cart', JSON.stringify(updatedCart))
+      setCartItems((prev) => [...prev, product.id])
+      toast.success(`${toTitleCase(product.name)} added to cart!`)
+
+      // update cart count in header
+      window.dispatchEvent(new CustomEvent('cart-updated', { detail: updatedCart.length }))
+    }
   }
+
+  const renderButton = (productId: string) => {
+    const added = cartItems.includes(productId)
+    return (
+      <button
+        onClick={() => {
+          const product = products.find((p) => p.id === productId)
+          if (product) handleAddToCart(product)
+        }}
+        disabled={added}
+        className={`mt-3 py-2 rounded w-full font-semibold transition ${
+          added
+            ? 'bg-yellow-400 text-black cursor-not-allowed'
+            : 'bg-black text-white hover:bg-gray-800'
+        }`}
+      >
+        {added ? 'Product Added ✅' : 'Add To Cart'}
+      </button>
+    )
+  }
+
+  const renderProductCard = (product: Product) => (
+    <div
+      key={product.id}
+      className="bg-white rounded-xl shadow hover:shadow-lg p-4 transition flex flex-col items-center"
+    >
+      <div className="w-full">
+        <Link href={`/product/${product.id}`}>
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            width={400}
+            height={400}
+            className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white cursor-pointer"
+          />
+          <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1 hover:underline">
+            {toTitleCase(product.name)}
+          </h3>
+        </Link>
+        <p className="text-green-600 font-bold mt-1 text-center">
+          {formatPrice(product.price)}
+        </p>
+        {renderButton(product.id)}
+      </div>
+    </div>
+  )
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -73,36 +134,7 @@ export default function HomePage() {
           <p className="text-center text-gray-500">Loading...</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {products.slice(0, 12).map((product) => (
-              <div
-                key={product.id}
-                className="bg-white rounded-xl shadow hover:shadow-lg p-4 transition flex flex-col items-center"
-              >
-                <div className="w-full">
-                  <Link href={`/product/${product.id}`}>
-                    <Image
-                      src={product.image_url}
-                      alt={product.name}
-                      width={400}
-                      height={400}
-                      className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white cursor-pointer"
-                    />
-                    <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1 hover:underline">
-                      {toTitleCase(product.name)}
-                    </h3>
-                  </Link>
-                  <p className="text-green-600 font-bold mt-1 text-center">
-                    {formatPrice(product.price)}
-                  </p>
-                  <button
-                    className="mt-3 bg-black text-white py-2 rounded hover:bg-gray-800 w-full"
-                    onClick={() => handleAddToCart(product)}
-                  >
-                    Add To Cart
-                  </button>
-                </div>
-              </div>
-            ))}
+            {products.slice(0, 12).map(renderProductCard)}
           </div>
         )}
       </main>
@@ -133,36 +165,7 @@ export default function HomePage() {
           <p className="text-center text-gray-500">Loading...</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {products.slice(12, 24).map((product) => (
-              <div
-                key={product.id}
-                className="bg-white rounded-xl shadow hover:shadow-lg p-4 transition flex flex-col items-center"
-              >
-                <div className="w-full">
-                  <Link href={`/product/${product.id}`}>
-                    <Image
-                      src={product.image_url}
-                      alt={product.name}
-                      width={400}
-                      height={400}
-                      className="w-full h-44 md:h-56 lg:h-64 object-contain rounded mb-2 bg-white cursor-pointer"
-                    />
-                    <h3 className="font-semibold text-md md:text-lg text-gray-800 text-center line-clamp-1 hover:underline">
-                      {toTitleCase(product.name)}
-                    </h3>
-                  </Link>
-                  <p className="text-green-600 font-bold mt-1 text-center">
-                    {formatPrice(product.price)}
-                  </p>
-                  <button
-                    className="mt-3 bg-black text-white py-2 rounded hover:bg-gray-800 w-full"
-                    onClick={() => handleAddToCart(product)}
-                  >
-                    Add To Cart
-                  </button>
-                </div>
-              </div>
-            ))}
+            {products.slice(12, 24).map(renderProductCard)}
           </div>
         )}
       </section>

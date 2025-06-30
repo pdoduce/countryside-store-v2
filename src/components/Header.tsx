@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ShoppingCart,
   User,
@@ -22,6 +22,8 @@ export default function Header() {
   const [searchVisible, setSearchVisible] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
+
   const router = useRouter()
 
   const categories = [
@@ -40,6 +42,23 @@ export default function Header() {
     }
   }
 
+  useEffect(() => {
+    // Set initial cart count
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    setCartCount(cart.length)
+
+    // Listen for custom 'cart-updated' events
+    const handleCartUpdated = (e: any) => {
+      setCartCount(e.detail)
+    }
+
+    window.addEventListener('cart-updated', handleCartUpdated)
+
+    return () => {
+      window.removeEventListener('cart-updated', handleCartUpdated)
+    }
+  }, [])
+
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -52,9 +71,7 @@ export default function Header() {
             height={32}
             className="h-8 w-auto"
           />
-          <span className="text-2xl font-bold text-green-700 hidden sm:inline">
-            Countryside
-          </span>
+          <span className="text-2xl font-bold text-green-700 hidden sm:inline">Countryside</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -62,7 +79,7 @@ export default function Header() {
           <Link href="/" className="hover:text-green-600">Home</Link>
           <Link href="/shop" className="hover:text-green-600">Shop</Link>
 
-          {/* Categories Dropdown - Click Based */}
+          {/* Categories Dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowCategoryDropdown((prev) => !prev)}
@@ -92,8 +109,8 @@ export default function Header() {
           <Link href="/contact" className="hover:text-green-600">Contact</Link>
         </nav>
 
-        {/* Icons (Search, User, Cart, Menu) */}
-        <div className="flex items-center space-x-4 text-gray-700">
+        {/* Icons */}
+        <div className="flex items-center space-x-4 text-gray-700 relative">
           <button
             className="md:hidden"
             onClick={() => setSearchVisible(!searchVisible)}
@@ -102,7 +119,7 @@ export default function Header() {
             {searchVisible ? (
               <X className="w-5 h-5 text-red-500" />
             ) : (
-              <Search className="w-5 h-5 cursor-pointer hover:text-green-700" />
+              <Search className="w-5 h-5 hover:text-green-700" />
             )}
           </button>
 
@@ -111,7 +128,18 @@ export default function Header() {
             onClick={() => setSearchVisible(!searchVisible)}
           />
           <User className="w-5 h-5 cursor-pointer hover:text-green-700" />
-          <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-green-700" />
+
+          {/* Shopping Cart Icon with Count */}
+          <div className="relative">
+            <Link href="/cart">
+              <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-green-700" />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
 
           {/* Hamburger Menu */}
           <button
@@ -127,10 +155,7 @@ export default function Header() {
       {/* Search Input */}
       {searchVisible && (
         <div className="bg-green-100 px-4 py-2 border-t md:border-none">
-          <form
-            onSubmit={handleSearchSubmit}
-            className="max-w-3xl mx-auto flex w-full"
-          >
+          <form onSubmit={handleSearchSubmit} className="max-w-3xl mx-auto flex w-full">
             <input
               type="text"
               value={searchTerm}
