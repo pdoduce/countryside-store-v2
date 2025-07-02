@@ -16,6 +16,7 @@ import {
   Sprout,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase/client' // ✅ Make sure this is your client-side supabase
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -23,6 +24,8 @@ export default function Header() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const [cartCount, setCartCount] = useState(0)
+  const [user, setUser] = useState<any>(null)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const router = useRouter()
 
@@ -43,11 +46,9 @@ export default function Header() {
   }
 
   useEffect(() => {
-    // Set initial cart count
     const cart = JSON.parse(localStorage.getItem('cart') || '[]')
     setCartCount(cart.length)
 
-    // Listen for custom 'cart-updated' events with correct typing
     const handleCartUpdated = (e: Event) => {
       const customEvent = e as CustomEvent<number>
       setCartCount(customEvent.detail)
@@ -59,6 +60,20 @@ export default function Header() {
       window.removeEventListener('cart-updated', handleCartUpdated)
     }
   }, [])
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser()
+      setUser(data.user)
+    }
+    getUser()
+  }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    localStorage.removeItem('cart')
+    router.push('/')
+  }
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -75,21 +90,18 @@ export default function Header() {
           <span className="text-2xl font-bold text-green-700 hidden sm:inline">Countryside</span>
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Nav */}
         <nav className="hidden md:flex space-x-6 text-sm text-gray-700 relative items-center">
           <Link href="/" className="hover:text-green-600">Home</Link>
           <Link href="/shop" className="hover:text-green-600">Shop</Link>
-
-          {/* Categories Dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowCategoryDropdown((prev) => !prev)}
-              className="flex items-center space-x-1 cursor-pointer hover:text-green-600 focus:outline-none"
+              className="flex items-center space-x-1 cursor-pointer hover:text-green-600"
             >
               <span>Categories</span>
               <ChevronDown className="w-4 h-4" />
             </button>
-
             {showCategoryDropdown && (
               <div className="absolute top-full left-0 mt-2 bg-white border rounded shadow-md z-20 py-2 w-44">
                 {categories.map((cat) => (
@@ -106,31 +118,49 @@ export default function Header() {
               </div>
             )}
           </div>
-
           <Link href="/contact" className="hover:text-green-600">Contact</Link>
         </nav>
 
-        {/* Icons */}
+        {/* Right Icons */}
         <div className="flex items-center space-x-4 text-gray-700 relative">
-          <button
-            className="md:hidden"
-            onClick={() => setSearchVisible(!searchVisible)}
-            aria-label="Toggle Search"
-          >
+          <button className="md:hidden" onClick={() => setSearchVisible(!searchVisible)}>
             {searchVisible ? (
               <X className="w-5 h-5 text-red-500" />
             ) : (
               <Search className="w-5 h-5 hover:text-green-700" />
             )}
           </button>
-
           <Search
             className="hidden md:block w-5 h-5 cursor-pointer hover:text-green-700"
             onClick={() => setSearchVisible(!searchVisible)}
           />
-          <User className="w-5 h-5 cursor-pointer hover:text-green-700" />
 
-          {/* Shopping Cart Icon with Count */}
+          {/* 🔑 Auth-aware Icon */}
+          {user ? (
+            <div className="relative">
+              <span onClick={() => setShowProfileMenu(!showProfileMenu)} className="cursor-pointer">
+                🧑
+              </span>
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded z-50">
+                  <Link href="/dashboard/orders" className="block px-4 py-2 hover:bg-green-100">🧾 Orders</Link>
+                  <Link href="/dashboard/settings" className="block px-4 py-2 hover:bg-green-100">⚙️ Settings</Link>
+                  <Link
+  href="/logout"
+  className="block px-4 py-2 w-full text-left hover:bg-green-100"
+>
+  🔐 Logout
+</Link>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/login">
+              <User className="w-5 h-5 cursor-pointer hover:text-green-700" />
+            </Link>
+          )}
+
+          {/* Cart Icon */}
           <div className="relative">
             <Link href="/cart">
               <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-green-700" />
@@ -142,27 +172,23 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Hamburger Menu */}
-          <button
-            className="md:hidden ml-2 focus:outline-none"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle Menu"
-          >
+          {/* Mobile Hamburger */}
+          <button className="md:hidden ml-2" onClick={() => setMenuOpen(!menuOpen)}>
             <Menu className="w-6 h-6 hover:text-green-700" />
           </button>
         </div>
       </div>
 
-      {/* Search Input */}
+      {/* Search Field */}
       {searchVisible && (
-        <div className="bg-green-100 px-4 py-2 border-t md:border-none">
-          <form onSubmit={handleSearchSubmit} className="max-w-3xl mx-auto flex w-full">
+        <div className="bg-green-100 px-4 py-2 border-t">
+          <form onSubmit={handleSearchSubmit} className="max-w-3xl mx-auto flex">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search for products..."
-              className="flex-1 p-2 rounded-l border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="flex-1 p-2 rounded-l border border-gray-300 focus:ring-2 focus:ring-green-500"
             />
             <button
               type="submit"
@@ -174,22 +200,19 @@ export default function Header() {
         </div>
       )}
 
-      {/* Mobile Dropdown Menu */}
+      {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden bg-white shadow-md border-t px-4 py-3 space-y-2 text-sm text-gray-700">
           <Link href="/" className="block hover:text-green-600">Home</Link>
           <Link href="/shop" className="block hover:text-green-600">Shop</Link>
-
           <details className="block">
-            <summary className="cursor-pointer text-gray-700 hover:text-green-600">
-              Categories
-            </summary>
+            <summary className="cursor-pointer hover:text-green-600">Categories</summary>
             <div className="pl-4 mt-2 space-y-1">
               {categories.map((cat) => (
                 <Link
                   key={cat.name}
                   href={`/categories/${cat.name}`}
-                  className="flex items-center text-sm text-gray-700 hover:text-green-600 capitalize"
+                  className="flex items-center text-sm hover:text-green-600 capitalize"
                 >
                   {cat.icon}
                   {cat.name}
@@ -197,9 +220,8 @@ export default function Header() {
               ))}
             </div>
           </details>
-
           <Link href="/contact" className="block hover:text-green-600">Contact</Link>
-          <Link href="/login" className="block hover:text-green-600">Account</Link>
+          {!user && <Link href="/login" className="block hover:text-green-600">Account</Link>}
         </div>
       )}
     </header>
