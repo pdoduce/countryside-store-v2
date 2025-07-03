@@ -1,11 +1,11 @@
 // src/app/api/verify-payment/route.ts
 
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createSupabaseServerClient  } from '@/lib/supabase/server'
 
 export async function POST(req: Request) {
   const { tx_ref } = await req.json()
-  const supabase = createClient()
+  const supabase = createSupabaseServerClient ()
 
   try {
     const FLW_SECRET_KEY = process.env.FLW_SECRET_KEY!
