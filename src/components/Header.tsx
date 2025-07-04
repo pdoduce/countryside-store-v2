@@ -16,7 +16,13 @@ import {
   Sprout,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client' // ✅ Make sure this is your client-side supabase
+import { supabase } from '@/lib/supabase/client'
+
+interface User {
+  id: string
+  email?: string
+  // Add other user properties as needed
+}
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -24,7 +30,7 @@ export default function Header() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const [cartCount, setCartCount] = useState(0)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null) // Fixed: Replaced 'any' with User type
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const router = useRouter()
@@ -45,6 +51,12 @@ export default function Header() {
     }
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    localStorage.removeItem('cart')
+    router.refresh()
+  }
+
   useEffect(() => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]')
     setCartCount(cart.length)
@@ -63,17 +75,13 @@ export default function Header() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data } = await supabase.auth.getUser()
-      setUser(data.user)
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (!error && user) {
+        setUser(user)
+      }
     }
     getUser()
   }, [])
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    localStorage.removeItem('cart')
-    router.push('/')
-  }
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -86,6 +94,7 @@ export default function Header() {
             width={120}
             height={32}
             className="h-8 w-auto"
+            priority
           />
           <span className="text-2xl font-bold text-green-700 hidden sm:inline">Countryside</span>
         </Link>
@@ -98,6 +107,8 @@ export default function Header() {
             <button
               onClick={() => setShowCategoryDropdown((prev) => !prev)}
               className="flex items-center space-x-1 cursor-pointer hover:text-green-600"
+              aria-expanded={showCategoryDropdown}
+              aria-label="Categories dropdown"
             >
               <span>Categories</span>
               <ChevronDown className="w-4 h-4" />
@@ -123,7 +134,11 @@ export default function Header() {
 
         {/* Right Icons */}
         <div className="flex items-center space-x-4 text-gray-700 relative">
-          <button className="md:hidden" onClick={() => setSearchVisible(!searchVisible)}>
+          <button 
+            className="md:hidden" 
+            onClick={() => setSearchVisible(!searchVisible)}
+            aria-label={searchVisible ? "Close search" : "Open search"}
+          >
             {searchVisible ? (
               <X className="w-5 h-5 text-red-500" />
             ) : (
@@ -133,36 +148,42 @@ export default function Header() {
           <Search
             className="hidden md:block w-5 h-5 cursor-pointer hover:text-green-700"
             onClick={() => setSearchVisible(!searchVisible)}
+            aria-label="Search"
           />
 
-          {/* 🔑 Auth-aware Icon */}
+          {/* Auth-aware Icon */}
           {user ? (
             <div className="relative">
-              <span onClick={() => setShowProfileMenu(!showProfileMenu)} className="cursor-pointer">
+              <button 
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="cursor-pointer"
+                aria-label="User profile menu"
+                aria-expanded={showProfileMenu}
+              >
                 🧑
-              </span>
+              </button>
               {showProfileMenu && (
                 <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded z-50">
                   <Link href="/dashboard/orders" className="block px-4 py-2 hover:bg-green-100">🧾 Orders</Link>
                   <Link href="/dashboard/settings" className="block px-4 py-2 hover:bg-green-100">⚙️ Settings</Link>
-                  <Link
-  href="/logout"
-  className="block px-4 py-2 w-full text-left hover:bg-green-100"
->
-  🔐 Logout
-</Link>
+                  <button
+                    onClick={handleLogout}
+                    className="block px-4 py-2 w-full text-left hover:bg-green-100"
+                  >
+                    🔐 Logout
+                  </button>
                 </div>
               )}
             </div>
           ) : (
-            <Link href="/login">
+            <Link href="/login" aria-label="Login">
               <User className="w-5 h-5 cursor-pointer hover:text-green-700" />
             </Link>
           )}
 
           {/* Cart Icon */}
           <div className="relative">
-            <Link href="/cart">
+            <Link href="/cart" aria-label="Shopping cart">
               <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-green-700" />
               {cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
@@ -173,7 +194,12 @@ export default function Header() {
           </div>
 
           {/* Mobile Hamburger */}
-          <button className="md:hidden ml-2" onClick={() => setMenuOpen(!menuOpen)}>
+          <button 
+            className="md:hidden ml-2" 
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Mobile menu"
+            aria-expanded={menuOpen}
+          >
             <Menu className="w-6 h-6 hover:text-green-700" />
           </button>
         </div>
@@ -189,10 +215,12 @@ export default function Header() {
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search for products..."
               className="flex-1 p-2 rounded-l border border-gray-300 focus:ring-2 focus:ring-green-500"
+              aria-label="Search products"
             />
             <button
               type="submit"
               className="bg-green-600 text-white px-4 py-2 rounded-r hover:bg-green-700"
+              aria-label="Submit search"
             >
               Search
             </button>
