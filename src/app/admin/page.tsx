@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
+import Link from 'next/link'
 
 export default function AdminLogin() {
   const router = useRouter()
@@ -70,6 +71,15 @@ export default function AdminLogin() {
           Login
         </button>
         {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
+        
+        <div className="mt-4 text-center">
+          <Link 
+            href="/admin/register" 
+            className="text-green-600 hover:underline text-sm"
+          >
+            Register new admin account
+          </Link>
+        </div>
       </form>
     </div>
   )

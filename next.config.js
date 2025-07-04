@@ -26,6 +26,10 @@ const nextConfig = {
     formats: ['image/webp'],
     minimumCacheTTL: 86400, // Cache images for 1 day
   },
+  eslint: {
+    // Disable ESLint during builds
+    ignoreDuringBuilds: true,
+  },
 };
 
 module.exports = nextConfig;

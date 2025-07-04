@@ -176,7 +176,7 @@ export default function AdminRegisterPage() {
 
       <div className="mt-6 text-center text-sm text-gray-600">
         Already have an account?{' '}
-        <Link href="/admin/login" className="text-green-600 hover:text-green-700 font-medium">
+        <Link href="/admin" className="text-green-600 hover:text-green-700 font-medium">
           Login here
         </Link>
       </div>

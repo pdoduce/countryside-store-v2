@@ -166,12 +166,7 @@ export default function Header() {
                 <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded z-50">
                   <Link href="/dashboard/orders" className="block px-4 py-2 hover:bg-green-100">🧾 Orders</Link>
                   <Link href="/dashboard/settings" className="block px-4 py-2 hover:bg-green-100">⚙️ Settings</Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block px-4 py-2 w-full text-left hover:bg-green-100"
-                  >
-                    🔐 Logout
-                  </button>
+                  <Link href="/logout" className="block px-4 py-2 hover:bg-green-100">🔐 Logout</Link>
                 </div>
               )}
             </div>
