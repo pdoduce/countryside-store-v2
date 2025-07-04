@@ -1,94 +1,76 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import Header from '@/components/Header'
-import Banner from '@/components/Banner'
-import Footer from '@/components/Footer'
 
-export default function AdminDashboardPage() {
+export default function AdminLogin() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
 
-  useEffect(() => {
-    const checkAccess = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
 
-      if (!user) {
-        router.push('/login')
-        return
-      }
+    // Step 1: Sign in the user
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-      setUser(user)
-
-      // Optional: check role from "roles" table
-      const { data: roleData } = await supabase
-        .from('roles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      if (roleData?.role !== 'admin') {
-        router.push('/')
-        return
-      }
-
-      setIsAdmin(true)
-      setLoading(false)
+    if (authError || !authData.user) {
+      setError('Invalid email or password.')
+      return
     }
 
-    checkAccess()
-  }, [router])
+    // Step 2: Check if the email exists in the `admin` table
+    const { data: adminCheck, error: adminError } = await supabase
+      .from('admin')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle()
 
-  if (loading) return <div className="p-10 text-center text-gray-600">Loading...</div>
+    if (!adminCheck || adminError) {
+      // Signed in successfully but not an admin
+      setError('❌ You are not admin, be warned!')
+      await supabase.auth.signOut() // Sign out non-admin user
+      return
+    }
+
+    // ✅ Step 3: Valid admin, redirect
+    router.push('/admin/admin')
+  }
 
   return (
-    <>
-      <Header />
-      <Banner />
-
-      <main className="max-w-6xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold mb-8 text-green-700 text-center">Admin Dashboard</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <div className="bg-white border rounded shadow p-6 hover:shadow-lg">
-            <h3 className="text-xl font-semibold mb-2">🛒 Manage Orders</h3>
-            <button
-              onClick={() => router.push('/admin/orders')}
-              className="text-green-600 hover:underline"
-            >
-              View Orders
-            </button>
-          </div>
-
-          <div className="bg-white border rounded shadow p-6 hover:shadow-lg">
-            <h3 className="text-xl font-semibold mb-2">📦 Manage Products</h3>
-            <button
-              onClick={() => router.push('/admin/products')}
-              className="text-green-600 hover:underline"
-            >
-              View Products
-            </button>
-          </div>
-
-          <div className="bg-white border rounded shadow p-6 hover:shadow-lg">
-            <h3 className="text-xl font-semibold mb-2">👥 Manage Users</h3>
-            <button
-              onClick={() => router.push('/admin/users')}
-              className="text-green-600 hover:underline"
-            >
-              View Users
-            </button>
-          </div>
-        </div>
-      </main>
-
-      <Footer />
-    </>
+    <div className="max-w-md mx-auto mt-20 bg-white p-6 shadow-md rounded-md">
+      <h2 className="text-2xl font-bold mb-4 text-green-700">Admin Login</h2>
+      <form onSubmit={handleLogin}>
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full p-3 border rounded mb-4"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full p-3 border rounded mb-4"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button
+          type="submit"
+          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+        >
+          Login
+        </button>
+        {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
+      </form>
+    </div>
   )
 }
