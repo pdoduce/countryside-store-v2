@@ -7,9 +7,14 @@ import Header from '@/components/Header'
 import Banner from '@/components/Banner'
 import Footer from '@/components/Footer'
 
+interface User {
+  id: string
+  email?: string
+}
+
 export default function UserSettingsPage() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null) // Fixed: Replaced 'any' with User type
   const [phone, setPhone] = useState('')
   const [billingAddress, setBillingAddress] = useState('')
   const [message, setMessage] = useState('')
@@ -17,24 +22,22 @@ export default function UserSettingsPage() {
 
   useEffect(() => {
     const fetchUserAndProfile = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const { data: { user }, error } = await supabase.auth.getUser()
 
-      if (!user) {
+      if (error || !user) {
         router.push('/login')
         return
       }
 
       setUser(user)
 
-      const { data: profile, error } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('phone, billing_address')
         .eq('id', user.id)
         .single()
 
-      if (!error && profile) {
+      if (!profileError && profile) {
         setPhone(profile.phone || '')
         setBillingAddress(profile.billing_address || '')
       }
@@ -49,6 +52,10 @@ export default function UserSettingsPage() {
     setMessage('')
     if (!phone || !billingAddress) {
       return setMessage('❌ All fields are required.')
+    }
+
+    if (!user?.id) {
+      return setMessage('❌ User not authenticated.')
     }
 
     const { error } = await supabase
@@ -75,12 +82,11 @@ export default function UserSettingsPage() {
           <p className="text-center text-gray-500">Loading user info...</p>
         ) : (
           <div className="bg-white shadow-md rounded-lg p-6 space-y-5 border">
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email (read-only)</label>
               <input
                 type="email"
-                value={user?.email}
+                value={user?.email || ''}
                 disabled
                 className="w-full px-3 py-2 border rounded bg-gray-100 cursor-not-allowed"
               />
