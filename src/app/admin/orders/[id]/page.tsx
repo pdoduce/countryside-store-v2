@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation' // Removed unused useRouter
 import { supabase } from '@/lib/supabase/client'
 
 interface OrderItem {
@@ -26,7 +26,6 @@ interface Order {
 export default function AdminOrderDetailsPage() {
   const params = useParams()
   const orderId = Array.isArray(params?.id) ? params.id[0] : params?.id
-  //const router = useRouter()
 
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
