@@ -9,8 +9,8 @@ import Footer from '@/components/Footer'
 
 export default function AdminDashboardPage() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
+  //const [user, setUser] = useState<any>(null)
+  //const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function AdminDashboardPage() {
         return
       }
 
-      setUser(user)
+      //setUser(user)
 
       // Optional: check role from "roles" table
       const { data: roleData } = await supabase
@@ -38,7 +38,7 @@ export default function AdminDashboardPage() {
         return
       }
 
-      setIsAdmin(true)
+      //setIsAdmin(true)
       setLoading(false)
     }
 
