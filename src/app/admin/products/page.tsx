@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -20,11 +20,17 @@ interface Product {
 
 const PRODUCTS_PER_PAGE = 12
 
-export default function AdminProductListPage() {
-  const router = useRouter()
+export default function AdminProductListPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center">Loading products...</div>}>
+      <AdminProductListPage />
+    </Suspense>
+  )
+}
+
+function AdminProductListPage() {
   const searchParams = useSearchParams()
-  const rawSearch = searchParams?.get('q')
-  const searchTerm = rawSearch ? rawSearch.toLowerCase() : ''
+  const searchTerm = searchParams?.get('q')?.toLowerCase() || ''
 
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -33,10 +39,13 @@ export default function AdminProductListPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [authLoading, setAuthLoading] = useState(true)
 
-  // ✅ Admin Access Check
+  const router = useRouter()
+
   useEffect(() => {
     const checkAccess = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
       if (!user) return router.push('/login')
 
@@ -47,17 +56,13 @@ export default function AdminProductListPage() {
         .single()
 
       if (roleData?.role !== 'admin') return router.push('/')
-
       setAuthLoading(false)
     }
 
     checkAccess()
   }, [router])
 
-  // ✅ Total Pages Calculation (not needed for search)
   useEffect(() => {
-    if (searchTerm) return // Skip total count when searching
-
     const fetchTotalCount = async () => {
       const { count } = await supabase
         .from('products')
@@ -69,30 +74,11 @@ export default function AdminProductListPage() {
     }
 
     if (!authLoading) fetchTotalCount()
-  }, [authLoading, searchTerm])
+  }, [authLoading])
 
-  // ✅ Fetch Products / Search
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true)
-
-      if (searchTerm) {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .ilike('name', `%${searchTerm}%`)
-
-        if (error) {
-          setError('Failed to search products')
-        } else {
-          setProducts(data || [])
-        }
-
-        setLoading(false)
-        return
-      }
-
-      // ✅ Pagination (only when not searching)
       const from = (currentPage - 1) * PRODUCTS_PER_PAGE
       const to = from + PRODUCTS_PER_PAGE - 1
 
@@ -104,10 +90,18 @@ export default function AdminProductListPage() {
 
       if (error) {
         setError('Failed to fetch products')
-      } else {
-        setProducts(data || [])
+        setLoading(false)
+        return
       }
 
+      let filteredData = data || []
+      if (searchTerm) {
+        filteredData = filteredData.filter((product) =>
+          product.name.toLowerCase().includes(searchTerm)
+        )
+      }
+
+      setProducts(filteredData)
       setLoading(false)
     }
 
@@ -120,19 +114,6 @@ export default function AdminProductListPage() {
     }
   }
 
-  const handleDelete = async (productId: string) => {
-    const confirmed = confirm('Are you sure you want to delete this product?')
-    if (!confirmed) return
-
-    const { error } = await supabase.from('products').delete().eq('id', productId)
-    if (error) {
-      alert('❌ Failed to delete product.')
-    } else {
-      alert('✅ Product deleted successfully. Reloading...')
-      location.reload()
-    }
-  }
-
   if (authLoading) return <div className="p-10 text-center text-gray-600">Checking access...</div>
 
   return (
@@ -141,7 +122,6 @@ export default function AdminProductListPage() {
       <AdminBanner />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* Back Button */}
         <div className="mb-6">
           <Link
             href="/admin/admin"
@@ -152,9 +132,7 @@ export default function AdminProductListPage() {
         </div>
 
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-green-700">
-            📦 {searchTerm ? `Search Results for "${searchTerm}"` : 'Admin Product Management'}
-          </h1>
+          <h1 className="text-2xl font-bold text-green-700">📦 Admin Product Management</h1>
           <Link
             href="/admin/products/add"
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
@@ -198,7 +176,10 @@ export default function AdminProductListPage() {
                   ✏️ Edit
                 </Link>
                 <button
-                  onClick={() => handleDelete(product.id)}
+                  onClick={() =>
+                    confirm('Are you sure you want to delete this product?') &&
+                    handleDelete(product.id)
+                  }
                   className="text-sm px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 flex-1"
                 >
                   🗑️ Delete
@@ -208,43 +189,54 @@ export default function AdminProductListPage() {
           ))}
         </div>
 
-        {/* Pagination Controls (hidden during search) */}
-        {!searchTerm && (
-          <div className="mt-10 flex justify-center space-x-2">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-              className="px-3 py-1 bg-gray-200 text-gray-800 rounded disabled:opacity-50"
-            >
-              Prev
-            </button>
+        {/* Pagination Controls */}
+        <div className="mt-10 flex justify-center space-x-2">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => handlePageChange(currentPage - 1)}
+            className="px-3 py-1 bg-gray-200 text-gray-800 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === page
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
-              disabled={currentPage === totalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
-              className="px-3 py-1 bg-gray-200 text-gray-800 rounded disabled:opacity-50"
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`px-3 py-1 rounded ${
+                currentPage === page
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             >
-              Next
+              {page}
             </button>
-          </div>
-        )}
+          ))}
+
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => handlePageChange(currentPage + 1)}
+            className="px-3 py-1 bg-gray-200 text-gray-800 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </main>
 
       <AdminFooter />
     </>
   )
+}
+
+async function handleDelete(productId: string) {
+  const confirmed = confirm('Are you sure you want to delete this product?')
+  if (!confirmed) return
+
+  const { error } = await supabase.from('products').delete().eq('id', productId)
+  if (error) {
+    alert('❌ Failed to delete product.')
+  } else {
+    alert('✅ Product deleted successfully. Reloading...')
+    location.reload()
+  }
 }
