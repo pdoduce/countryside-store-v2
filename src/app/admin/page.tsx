@@ -41,7 +41,7 @@ export default function AdminLogin() {
     }
 
     // ✅ Step 3: Valid admin, redirect
-    router.push('/admin/admin')
+    router.push('/admin/dashboard')
   }
 
   return (

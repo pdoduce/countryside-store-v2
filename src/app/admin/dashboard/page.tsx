@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
 
 import AdminHeader from '../resusables/admin_header'
@@ -19,7 +20,7 @@ export default function AdminDashboardPage() {
       } = await supabase.auth.getUser()
 
       if (!user) {
-        router.push('/login')
+        router.push('/admin') // redirect to login page
         return
       }
 
@@ -53,32 +54,23 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
           <div className="bg-white border rounded shadow p-6 hover:shadow-lg">
             <h3 className="text-xl font-semibold mb-2">🛒 Manage Orders</h3>
-            <button
-              onClick={() => router.push('/admin/orders')}
-              className="text-green-600 hover:underline"
-            >
+            <Link href="/admin/orders" className="text-green-600 hover:underline">
               View Orders
-            </button>
+            </Link>
           </div>
 
           <div className="bg-white border rounded shadow p-6 hover:shadow-lg">
             <h3 className="text-xl font-semibold mb-2">📦 Manage Products</h3>
-            <button
-              onClick={() => router.push('/admin/products')}
-              className="text-green-600 hover:underline"
-            >
+            <Link href="/admin/products" className="text-green-600 hover:underline">
               View Products
-            </button>
+            </Link>
           </div>
 
           <div className="bg-white border rounded shadow p-6 hover:shadow-lg">
             <h3 className="text-xl font-semibold mb-2">👥 Manage Users</h3>
-            <button
-              onClick={() => router.push('/admin/users')}
-              className="text-green-600 hover:underline"
-            >
+            <Link href="/admin/users" className="text-green-600 hover:underline">
               View Users
-            </button>
+            </Link>
           </div>
         </div>
       </main>

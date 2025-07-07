@@ -1,8 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation' // Removed unused useRouter
+import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
+
+// ✅ Admin layout components
+import AdminHeader from '../../resusables/admin_header'
+import AdminBanner from '../../resusables/admin_banner'
+import AdminFooter from '../../resusables/admin_footer'
 
 interface OrderItem {
   id: string
@@ -92,58 +97,75 @@ export default function AdminOrderDetailsPage() {
   if (!order) return <div className="p-6 text-gray-600">Order not found.</div>
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4 text-green-700">Admin – Order Details</h2>
+    <>
+      <AdminHeader />
+      <AdminBanner />
 
-      <div className="bg-white shadow rounded border p-4 mb-6">
-        <p><strong>Order ID:</strong> {order.id}</p>
-        <p><strong>Customer:</strong> {order.customer_name} ({order.customer_email})</p>
-        <p><strong>Phone:</strong> {order.customer_phone}</p>
-        <p><strong>Address:</strong> {order.address}</p>
-        <p>
-          <strong>Status:</strong>{' '}
-          <span className="capitalize">{order.payment_status}</span>{' '}
-          {order.payment_status !== 'paid' && (
-            <button
-              onClick={markAsPaid}
-              disabled={updating}
-              className="ml-4 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-            >
-              {updating ? 'Updating...' : 'Mark as Paid'}
-            </button>
-          )}
-        </p>
-        <p><strong>Date:</strong> {new Date(order.created_at).toLocaleString()}</p>
-        <p><strong>Total:</strong> ₦{Number(order.total).toLocaleString()}</p>
-      </div>
+      <main className="max-w-4xl mx-auto p-6">
+        {/* ✅ Back to Orders Button */}
+        <div className="mb-6">
+          <a
+            href="/admin/orders"
+            className="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded transition"
+          >
+            ← Back to Orders
+          </a>
+        </div>
 
-      <h3 className="text-lg font-semibold mb-3">Order Items</h3>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left border">
-          <thead className="bg-green-100 text-gray-700">
-            <tr>
-              <th className="px-4 py-2 border">#</th>
-              <th className="px-4 py-2 border">Product</th>
-              <th className="px-4 py-2 border">Price</th>
-              <th className="px-4 py-2 border">Qty</th>
-              <th className="px-4 py-2 border">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {order.items?.map((item, i) => (
-              <tr key={item.id} className="border-t">
-                <td className="px-4 py-2 border">{i + 1}</td>
-                <td className="px-4 py-2 border">{item.name}</td>
-                <td className="px-4 py-2 border">₦{item.price.toLocaleString()}</td>
-                <td className="px-4 py-2 border">{item.quantity}</td>
-                <td className="px-4 py-2 border">
-                  ₦{(item.price * item.quantity).toLocaleString()}
-                </td>
+        <h2 className="text-2xl font-bold mb-4 text-green-700">Admin – Order Details</h2>
+
+        <div className="bg-white shadow rounded border p-4 mb-6">
+          <p><strong>Order ID:</strong> {order.id}</p>
+          <p><strong>Customer:</strong> {order.customer_name} ({order.customer_email})</p>
+          <p><strong>Phone:</strong> {order.customer_phone}</p>
+          <p><strong>Address:</strong> {order.address}</p>
+          <p>
+            <strong>Status:</strong>{' '}
+            <span className="capitalize">{order.payment_status}</span>{' '}
+            {order.payment_status !== 'paid' && (
+              <button
+                onClick={markAsPaid}
+                disabled={updating}
+                className="ml-4 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+              >
+                {updating ? 'Updating...' : 'Mark as Paid'}
+              </button>
+            )}
+          </p>
+          <p><strong>Date:</strong> {new Date(order.created_at).toLocaleString()}</p>
+          <p><strong>Total:</strong> ₦{Number(order.total).toLocaleString()}</p>
+        </div>
+
+        <h3 className="text-lg font-semibold mb-3">Order Items</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left border">
+            <thead className="bg-green-100 text-gray-700">
+              <tr>
+                <th className="px-4 py-2 border">#</th>
+                <th className="px-4 py-2 border">Product</th>
+                <th className="px-4 py-2 border">Price</th>
+                <th className="px-4 py-2 border">Qty</th>
+                <th className="px-4 py-2 border">Subtotal</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+            </thead>
+            <tbody>
+              {order.items?.map((item, i) => (
+                <tr key={item.id} className="border-t">
+                  <td className="px-4 py-2 border">{i + 1}</td>
+                  <td className="px-4 py-2 border">{item.name}</td>
+                  <td className="px-4 py-2 border">₦{item.price.toLocaleString()}</td>
+                  <td className="px-4 py-2 border">{item.quantity}</td>
+                  <td className="px-4 py-2 border">
+                    ₦{(item.price * item.quantity).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
+
+      <AdminFooter />
+    </>
   )
 }
